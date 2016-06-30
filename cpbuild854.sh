@@ -1,12 +1,13 @@
 #!/usr/bin/bash
 
-BUILD_VERSION=$1
-TERACOPY="/cygdrive/c/Program Files/TeraCopy/TeraCopy.exe"
-JRE=/cygdrive/z/build/pt/ptdist/pt854/854/debug/WINX86/install_Windows.ora/jre
+BUILD_RELEASE=$1
+MAJOR_RELEASE=${BUILD_RELEASE::3}
 
-BUILD_DIR=/cygdrive/z/build/pt/pt854/${BUILD_VERSION}/debug/WINX86/pt${BUILD_VERSION}-debug
+JRE=/cygdrive/z/build/pt/ptdist/pt${MAJOR_RELEASE}/${MAJOR_RELEASE}/debug/WINX86/install_Windows.ora/jre
 
-TARGET_DIR=/cygdrive/d/build/pt${BUILD_VERSION}-debug
+BUILD_DIR=/cygdrive/z/build/pt/pt${MAJOR_RELEASE}/${BUILD_RELEASE}/debug/WINX86/pt${BUILD_RELEASE}-debug
+
+TARGET_DIR=/cygdrive/d/build/pt${BUILD_RELEASE}-debug
 SOURCE_DIRS=(
 ActiveX
 Apps
@@ -33,16 +34,11 @@ Usage:
 EOF
 }
 
-if [ $# != 1 ]
-then
+if [[ $# != 1  || ${BUILD_RELEASE::2} != '85' ]]; then
     print_usage
     exit
 fi
 
-#if [ ! -x "${TERACOPY}" ]; then
-#    echo ${TERACOPY} : No such file
-#    exit
-#fi
 
 if [ ! -d "${BUILD_DIR}" ]; then
     echo ${BUILD_DIR} : No such directory
@@ -88,6 +84,21 @@ else
     echo OK
 fi
 
+mkdir -p "${TARGET_DIR}/SETUP"
+if [ $? != 0 ]; then
+    echo mkdir -p "${TARGET_DIR}/SETUP" : failed!
+    exit
+fi
+
+echo -n Copy "SETUP/PsMpPIAInstall ... ... "
+cp -rf "${BUILD_DIR}/SETUP/PsMpPIAInstall" "${TARGET_DIR}/SETUP"
+if [ $? != 0 ]; then
+    echo failed!
+    exit
+else 
+    echo OK
+fi
+
 for var in ${SOURCE_DIRS[@]};do
     if [ ! -e "${BUILD_DIR}/${var}" ]; then
         echo "${BUILD_DIR}/${var}" : No such file or directory
@@ -104,24 +115,9 @@ for var in ${SOURCE_DIRS[@]};do
     fi
 done
 
-mkdir -p "${TARGET_DIR}/SETUP"
-if [ $? != 0 ]; then
-    echo mkdir -p "${TARGET_DIR}/SETUP" : failed!
-    exit
-fi
-
-echo -n Copy "SETUP/PsMpPIAInstall ... ... "
-cp -rf "${BUILD_DIR}/SETUP/PsMpPIAInstall" "${TARGET_DIR}/SETUP"
-if [ $? != 0 ]; then
-    echo failed!
-    exit
-else 
-    echo OK
-fi
-
 echo
 echo Copying files succeeded!
 
-if [ -f "~/peopletools854.tgz" ]; then
-    tar zxvf ~/peopletools854.tgz -C "${TARGET_DIR}"
-fi
+#if [ -f "~/peopletools854.tgz" ]; then
+#    tar zxvf ~/peopletools854.tgz -C "${TARGET_DIR}"
+#fi
