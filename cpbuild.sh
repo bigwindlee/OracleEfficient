@@ -3,7 +3,7 @@
 BUILD_RELEASE=$1
 MAJOR_RELEASE=${BUILD_RELEASE::3}
 
-JRE=/cygdrive/z/build/pt/ptdist/pt${MAJOR_RELEASE}/${MAJOR_RELEASE}/debug/WINX86/install_Windows.ora/jre
+JRE=/cygdrive/z/build/pt/ptdist/pt${MAJOR_RELEASE}/${BUILD_RELEASE}/debug/WINX86/install_Windows.ora/jre
 
 BUILD_DIR=/cygdrive/z/build/pt/pt${MAJOR_RELEASE}/${BUILD_RELEASE}/debug/WINX86/pt${BUILD_RELEASE}-debug
 
