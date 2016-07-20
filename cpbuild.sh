@@ -9,6 +9,7 @@ BUILD_DIR=/cygdrive/z/build/pt/pt${MAJOR_RELEASE}/${BUILD_RELEASE}/debug/WINX86/
 
 TARGET_DIR=/cygdrive/d/build/pt${BUILD_RELEASE}-debug
 SOURCE_DIRS=(
+psconfig.bat
 ActiveX
 Apps
 appserv
@@ -21,7 +22,6 @@ secvault
 TUXEDO
 utility
 WEB
-psconfig.bat
 src
 )
 
@@ -34,6 +34,47 @@ Usage:
 EOF
 }
 
+copy_jre_dir(){
+    if [ "${MAJOR_RELEASE}" == "854" ]; then
+        JRE=/cygdrive/z/build/pt/ptdist/pt${MAJOR_RELEASE}/${MAJOR_RELEASE}/debug/WINX86/install_Windows.ora/jre
+    elif [ "${MAJOR_RELEASE}" == "853" ]; then
+        JRE=/cygdrive/z/build/pt/pt${MAJOR_RELEASE}/${MAJOR_RELEASE}/debug/WINX86/install_Windows.ora/jre
+    else
+        JRE=/cygdrive/z/build/pt/ptdist/pt${MAJOR_RELEASE}/${BUILD_RELEASE}/debug/WINX86/install_Windows.ora/jre
+    fi
+    
+    if [ ! -d "${JRE}" ]; then
+        echo ${JRE} : No such directory
+        exit
+    fi
+    
+    echo -n "Copy JRE ... ... "
+    cp -rf "${JRE}" "${TARGET_DIR}"
+    if [ $? != 0 ]; then
+        echo failed!
+        exit
+    else
+        echo OK
+    fi
+       
+    if [ "${MAJOR_RELEASE}" == "853" ]; then
+        JRE64=/cygdrive/z/build/pt/pt${MAJOR_RELEASE}/${MAJOR_RELEASE}/debug/WINX86/install_Windows.ora/jre64
+        if [ ! -d "${JRE64}" ]; then
+            echo ${JRE64} : No such directory
+            exit
+        fi
+        
+        echo -n "Copy JRE64 ... ... "
+        cp -rf "${JRE64}" "${TARGET_DIR}"
+        if [ $? != 0 ]; then
+            echo failed!
+            exit
+        else
+            echo OK
+        fi
+    fi
+}
+
 if [[ $# != 1  || ${BUILD_RELEASE::2} != '85' ]]; then
     print_usage
     exit
@@ -42,11 +83,6 @@ fi
 
 if [ ! -d "${BUILD_DIR}" ]; then
     echo ${BUILD_DIR} : No such directory
-    exit
-fi
-
-if [ ! -d "${JRE}" ]; then
-    echo ${JRE} : No such directory
     exit
 fi
 
@@ -75,14 +111,7 @@ if [ $? != 0 ]; then
     exit
 fi
 
-echo -n "Copy JRE ... ... "
-cp -rf "${JRE}" "${TARGET_DIR}"
-if [ $? != 0 ]; then
-    echo failed!
-    exit
-else
-    echo OK
-fi
+copy_jre_dir
 
 mkdir -p "${TARGET_DIR}/SETUP"
 if [ $? != 0 ]; then
@@ -121,3 +150,4 @@ echo Copying files succeeded!
 #if [ -f "~/peopletools854.tgz" ]; then
 #    tar zxvf ~/peopletools854.tgz -C "${TARGET_DIR}"
 #fi
+
