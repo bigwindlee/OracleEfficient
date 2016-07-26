@@ -2,22 +2,21 @@
 
 BUILD_RELEASE=$1
 MAJOR_RELEASE=${BUILD_RELEASE::3}
-
-JRE=/cygdrive/z/build/pt/ptdist/pt${MAJOR_RELEASE}/${BUILD_RELEASE}/debug/WINX86/install_Windows.ora/jre
+DST_DIR=/cygdrive/d/build
 
 BUILD_DIR=/cygdrive/z/build/pt/pt${MAJOR_RELEASE}/${BUILD_RELEASE}/debug/WINX86/pt${BUILD_RELEASE}-debug
+TARGET_DIR=${DST_DIR}/pt${BUILD_RELEASE}-debug
 
-TARGET_DIR=/cygdrive/d/build/pt${BUILD_RELEASE}-debug
 SOURCE_DIRS=(
 psconfig.bat
-ActiveX
+#ActiveX
 Apps
 appserv
 bin
 build
 class
 lib
-pgpsdk302
+#pgpsdk302
 secvault
 TUXEDO
 utility
@@ -146,8 +145,3 @@ done
 
 echo
 echo Copying files succeeded!
-
-#if [ -f "~/peopletools854.tgz" ]; then
-#    tar zxvf ~/peopletools854.tgz -C "${TARGET_DIR}"
-#fi
-
