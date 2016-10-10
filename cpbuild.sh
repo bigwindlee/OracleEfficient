@@ -4,9 +4,11 @@ BUILD_RELEASE=$1
 MAJOR_RELEASE=${BUILD_RELEASE::3}
 DST_DIR=/cygdrive/d/build
 
-BUILD_DIR=/cygdrive/z/build/pt/pt${MAJOR_RELEASE}/${BUILD_RELEASE}/debug/WINX86/pt${BUILD_RELEASE}-debug
-TARGET_DIR=${DST_DIR}/pt${BUILD_RELEASE}-debug
 
+
+BUILD_DIR=/cygdrive/z/build/pt/pt${MAJOR_RELEASE}/${BUILD_RELEASE}/debug/WINX86/pt${BUILD_RELEASE}-debug
+
+TARGET_DIR=${DST_DIR}/pt${BUILD_RELEASE}-debug
 SOURCE_DIRS=(
 psconfig.bat
 #ActiveX
@@ -34,7 +36,7 @@ EOF
 }
 
 copy_jre_dir(){
-    if [ "${MAJOR_RELEASE}" == "854" ]; then
+    if [[ "${MAJOR_RELEASE}" == "854" || "${MAJOR_RELEASE}" == "855" ]]; then
         JRE=/cygdrive/z/build/pt/ptdist/pt${MAJOR_RELEASE}/${MAJOR_RELEASE}/debug/WINX86/install_Windows.ora/jre
     elif [ "${MAJOR_RELEASE}" == "853" ]; then
         JRE=/cygdrive/z/build/pt/pt${MAJOR_RELEASE}/${MAJOR_RELEASE}/debug/WINX86/install_Windows.ora/jre
@@ -80,10 +82,24 @@ if [[ $# != 1  || ${BUILD_RELEASE::2} != '85' ]]; then
 fi
 
 
-if [ ! -d "${BUILD_DIR}" ]; then
-    echo ${BUILD_DIR} : No such directory
-    exit
-fi
+while [ ! -d "${BUILD_DIR}" ]; do
+    echo WARNING: "${BUILD_DIR}" is not existing!
+    read -p "Do you want to input BUILD_DIR manually? (Y/N) " yn
+    case $yn in
+        [Yy]* ) 
+            read -p "Please input: " bdir
+            BUILD_DIR=$bdir 
+            continue
+            ;;
+        [Nn]* ) 
+            exit
+            ;;
+        * ) 
+            echo "Please answer yes or no."
+            ;;
+    esac
+done
+
 
 if [ -d "${TARGET_DIR}" ]; then
     echo WARNING: "${TARGET_DIR}" is existing!
