@@ -18,7 +18,7 @@ bin
 build
 class
 lib
-#pgpsdk302
+pgpsdk302
 secvault
 TUXEDO
 utility
