@@ -10,6 +10,24 @@ def generate_config_list(ps_home, appserver_name):
     PS_CFG_HOME = os.path.normcase(PS_CFG_HOME)
     PS_CFG_HOME = PS_CFG_HOME.replace('\\', '/');
     
+    index = PS_CFG_HOME.rfind('pt85')
+    if index == -1:
+        raise RuntimeError('Cannot get PT version from ' + PS_CFG_HOME)
+    else:
+        PT_VERSION = PS_CFG_HOME[index+2:index+5]
+    
+    JSL_PORT = PT_VERSION + '0'
+    HTTP_PORT = '8' + PT_VERSION
+    
+    if PT_VERSION == '856':
+        BEA_HOME = 'C:/wls/wls1221'  # starting from 856-802-I1
+    elif PT_VERSION == '855':
+        BEA_HOME = 'C:/wls/wls1213'
+    elif PT_VERSION == '854':
+        BEA_HOME = 'C:/wls/Wls1212WithJAVA725Installed'
+    else:
+        raise RuntimeError('Not supported')    
+    
     # PS_CFG_HOME
     conf.append('PS_CFG_HOME=' + PS_CFG_HOME);
 
@@ -20,7 +38,7 @@ def generate_config_list(ps_home, appserver_name):
 
     # Oracle WebLogic domains
     conf.append('SERVER_TYPE=weblogic')
-    conf.append('BEA_HOME=C:/wls/wls1213')
+    conf.append('BEA_HOME=' + BEA_HOME)
     conf.append('USER_ID=system')
     conf.append('USER_PWD=Passw0rd')
     conf.append('USER_PWD_RETYPE=Passw0rd')
@@ -45,8 +63,8 @@ def generate_config_list(ps_home, appserver_name):
 
     # Enter port numbers and summaries
     conf.append('APPSERVER_NAME=' + appserver_name)
-    conf.append('JSL_PORT=8550')
-    conf.append('HTTP_PORT=8855')
+    conf.append('JSL_PORT=' + JSL_PORT)
+    conf.append('HTTP_PORT=' + HTTP_PORT)
     conf.append('HTTPS_PORT=443')
     conf.append('AUTH_DOMAIN=.us.oracle.com')     # Authentication Token Domain:(optional)
 
@@ -101,9 +119,11 @@ if __name__ == '__main__':
     CMD += RESP_FILE
         
     generate_resp_file(RESP_FILE, generate_config_list(PS_HOME, APPSERVER_NAME))
+    #print(RESP_FILE)
     subprocess.check_call(CMD)
     
     LOG_FILE = os.path.join(PS_HOME, APPSERVER_NAME, r'webserv\piainstall_peoplesoft.log')
+    print(LOG_FILE)
     if os.path.isfile(LOG_FILE):
         subprocess.check_call('start ' + LOG_FILE, shell=True)
         
