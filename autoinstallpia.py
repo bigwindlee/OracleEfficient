@@ -3,7 +3,7 @@
 import os
 
 def generate_config_list(ps_home, appserver_name):
-    conf = list()
+    conf = []
     
     PS_CFG_HOME = os.path.join(ps_home, appserver_name)
     PS_CFG_HOME = os.path.normpath(PS_CFG_HOME)
@@ -72,8 +72,8 @@ def generate_config_list(ps_home, appserver_name):
     # password will be used to retrieve the web profile from the database. (NOTE: Available
     # preset web profile names are "PROD", "TEST", "DEV", and "KIOSK")
     conf.append('WEB_PROF_NAME=DEV')
-    conf.append('WEB_PROF_PWD=PTWEBSERVER')
-    conf.append('WEB_PROF_PWD_RETYPE=PTWEBSERVER')
+    conf.append('WEB_PROF_PWD=Passw0rd')
+    conf.append('WEB_PROF_PWD_RETYPE=Passw0rd')
 
     # Select the Report Repository location
     conf.append('REPORTS_DIR=C:/psreports')    
@@ -97,7 +97,6 @@ if __name__ == '__main__':
 
     PS_HOME = sys.argv[1]
     PS_HOME = os.path.normpath(PS_HOME)
-    PS_HOME = os.path.normcase(PS_HOME)
     
     if sys.argv[2:]:
         APPSERVER_NAME = sys.argv[2]
@@ -119,11 +118,9 @@ if __name__ == '__main__':
     CMD += RESP_FILE
         
     generate_resp_file(RESP_FILE, generate_config_list(PS_HOME, APPSERVER_NAME))
-    #print(RESP_FILE)
     subprocess.check_call(CMD)
     
     LOG_FILE = os.path.join(PS_HOME, APPSERVER_NAME, r'webserv\piainstall_peoplesoft.log')
-    print(LOG_FILE)
     if os.path.isfile(LOG_FILE):
         subprocess.check_call('start ' + LOG_FILE, shell=True)
         
