@@ -91,20 +91,24 @@ if __name__ == '__main__':
     import sys, socket
     import subprocess
     
+    CHG_PWD_PY = r'C:\mypython\web_prof_pwd.py'
+    CONF_PROPERTIES = r'peoplesoft\applications\peoplesoft\PORTAL.war\WEB-INF\psftdocs\ps\configuration.properties'
+    
     if not sys.argv[1:]:
         print('Usage:\n\t%s PS_HOME_DIR [APPSERVER_NAME]' % os.path.basename(sys.argv[0]))
         os._exit(1)
 
-    PS_HOME = sys.argv[1]
-    PS_HOME = os.path.normpath(PS_HOME)
+    PS_HOME = os.path.normpath(sys.argv[1])
     
     if sys.argv[2:]:
         APPSERVER_NAME = sys.argv[2]
     else:
         APPSERVER_NAME = socket.gethostname()
         
-    if os.path.exists(os.path.join(PS_HOME, APPSERVER_NAME)):
-        print('Error: Existing file or directory: ' + os.path.join(PS_HOME, APPSERVER_NAME))
+    APPSERVER_NAME_EX = os.path.join(PS_HOME, APPSERVER_NAME)
+        
+    if os.path.exists(APPSERVER_NAME_EX):
+        print('Error: Existing file or directory: ' + APPSERVER_NAME_EX)
         os._exit(2)
     
     RESP_FILE = os.path.join(PS_HOME, r'SETUP\PsMpPIAInstall\scripts\resp_file_feng.txt')
@@ -118,9 +122,14 @@ if __name__ == '__main__':
     CMD += RESP_FILE
         
     generate_resp_file(RESP_FILE, generate_config_list(PS_HOME, APPSERVER_NAME))
-    subprocess.check_call(CMD)
+    subprocess.check_call(CMD, stdout=subprocess.DEVNULL)
     
-    LOG_FILE = os.path.join(PS_HOME, APPSERVER_NAME, r'webserv\piainstall_peoplesoft.log')
+    LOG_FILE = os.path.join(APPSERVER_NAME_EX, r'webserv\piainstall_peoplesoft.log')
     if os.path.isfile(LOG_FILE):
         subprocess.check_call('start ' + LOG_FILE, shell=True)
-        
+    
+    with open(LOG_FILE) as logf:
+        if 'PIA_INSTALL_SUCCESS' in logf.read() and os.path.isfile(CHG_PWD_PY):
+            with open(CHG_PWD_PY, 'r') as input, open(os.path.join(PS_HOME, os.path.basename(CHG_PWD_PY)), 'w') as output:
+                for line in input:
+                    output.write(line.replace('placeholder', os.path.join(APPSERVER_NAME_EX, 'webserv', CONF_PROPERTIES)))
