@@ -26,7 +26,7 @@ def generate_config_list(ps_home, appserver_name):
     elif PT_VERSION == '854':
         BEA_HOME = 'C:/wls/Wls1212WithJAVA725Installed'
     else:
-        raise RuntimeError('Not supported')    
+        raise RuntimeError('Not support ' + PT_VERSION)    
     
     # PS_CFG_HOME
     conf.append('PS_CFG_HOME=' + PS_CFG_HOME);
@@ -86,7 +86,25 @@ def generate_resp_file(filename, conflist):
         for line in conflist:
             resp.write(line + '\n');
 
-
+def install_pia(PS_HOME, APPSERVER_NAME):       
+    RESP_FILE = os.path.join(PS_HOME, r'SETUP\PsMpPIAInstall\scripts\resp_file_feng.txt')
+    CMD = os.path.join(PS_HOME, r'SETUP\PsMpPIAInstall\setup.bat')
+    
+    if not os.path.isfile(CMD):
+        raise RuntimeError('Error: No such file: ' + CMD)
+    
+    CMD += r' -i silent -DRES_FILE_PATH='
+    CMD += RESP_FILE
+        
+    generate_resp_file(RESP_FILE, generate_config_list(PS_HOME, APPSERVER_NAME))
+    subprocess.check_call(CMD, stdout=subprocess.DEVNULL)
+    
+    with open(os.path.join(PS_HOME, APPSERVER_NAME, r'webserv\piainstall_peoplesoft.log')) as logf:
+        if 'PIA_INSTALL_SUCCESS' in logf.read() and os.path.isfile(CHG_PWD_PY):
+            with open(CHG_PWD_PY, 'r') as input, open(os.path.join(PS_HOME, os.path.basename(CHG_PWD_PY)), 'w') as output:
+                for line in input:
+                    output.write(line.replace('placeholder', os.path.join(APPSERVER_NAME_EX, 'webserv', CONF_PROPERTIES)))
+            
 if __name__ == '__main__':
     import sys, socket
     import subprocess
@@ -111,25 +129,20 @@ if __name__ == '__main__':
         print('Error: Existing file or directory: ' + APPSERVER_NAME_EX)
         os._exit(2)
     
-    RESP_FILE = os.path.join(PS_HOME, r'SETUP\PsMpPIAInstall\scripts\resp_file_feng.txt')
-    CMD = os.path.join(PS_HOME, r'SETUP\PsMpPIAInstall\setup.bat')
-    
-    if not os.path.isfile(CMD):
-        print('Error: No such file: ' + CMD)
-        os._exit(3)
-    
-    CMD += r' -i silent -DRES_FILE_PATH='
-    CMD += RESP_FILE
-        
-    generate_resp_file(RESP_FILE, generate_config_list(PS_HOME, APPSERVER_NAME))
-    subprocess.check_call(CMD, stdout=subprocess.DEVNULL)
+    install_pia(PS_HOME, APPSERVER_NAME)
     
     LOG_FILE = os.path.join(APPSERVER_NAME_EX, r'webserv\piainstall_peoplesoft.log')
     if os.path.isfile(LOG_FILE):
-        subprocess.check_call('start ' + LOG_FILE, shell=True)
+        subprocess.check_call('start ' + LOG_FILE, shell=True)    
     
-    with open(LOG_FILE) as logf:
-        if 'PIA_INSTALL_SUCCESS' in logf.read() and os.path.isfile(CHG_PWD_PY):
-            with open(CHG_PWD_PY, 'r') as input, open(os.path.join(PS_HOME, os.path.basename(CHG_PWD_PY)), 'w') as output:
-                for line in input:
-                    output.write(line.replace('placeholder', os.path.join(APPSERVER_NAME_EX, 'webserv', CONF_PROPERTIES)))
+
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
