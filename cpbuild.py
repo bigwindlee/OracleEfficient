@@ -24,8 +24,9 @@ OPTIONAL_DIRS = ['ActiveX', 'pgpsdk302']
     
 def WINDOWS_COPY_TREE(src, dst):
     COPY_DIR_CMD = ' '.join(['Robocopy', '/E', src, dst])
-    if subprocess.call(COPY_DIR_CMD, stdout=subprocess.DEVNULL) != 1:
-        raise RuntimeError('Robocopy failed. From: ' + src + ' To: ' + dst)
+    retcode = subprocess.call(COPY_DIR_CMD, stdout=subprocess.DEVNULL)
+    if retcode not in [0, 1]:
+        raise RuntimeError(('Robocopy failed(retcode=%d). From: ' + src + ' To: ' + dst) % retcode)
 
 
 def COPY_BUILD(BUILD_RELEASE, LOG=sys.stdout):    
@@ -113,5 +114,3 @@ if __name__ == '__main__':
     #    
     #with open(os.path.join(LOG_DIR, LOG_NAME), 'w') as f:
     #    COPY_BUILD(sys.argv[1], f)
-        
-        
