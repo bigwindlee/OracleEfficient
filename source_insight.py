@@ -24,6 +24,8 @@ def CleanseFileInPlace(dir, flags):
                 outfile = fullname + '.bak'
                 with open(fullname, 'r', encoding='utf-8', errors='ignore') as fin, open(outfile, 'w', encoding='utf-8', errors='ignore') as fout:
                     for line in fin:
+                        if line.strip() == 'PsStartProtoC' or line.strip() == 'PsEndProtoC':
+                            continue
                         newline = line
                         for regex in regexs:
                             if regex.search(newline):
