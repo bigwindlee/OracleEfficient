@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import os, re, fileinput
+import os, re, fileinput, shutil
 
 def GetFlagsFromFile(filename):
     flags = set()
@@ -21,14 +21,19 @@ def CleanseFileInPlace(dir, flags):
         for fname in fileshere:
             fullname = os.path.join(dirname, fname)
             if os.path.splitext(fullname)[1] in extensions:
-                for line in fileinput.input(fullname, inplace=True):
-                    newline = line
-                    for regex in regexs:
-                        if regex.search(line):
-                            newline = regex.sub(r'\1', line)
-                            break
-                    
-                    print(newline, end='')
+                outfile = fullname + '.bak'
+                with open(fullname, 'r', encoding='utf-8', errors='ignore') as fin, open(outfile, 'w') as fout:
+                    for line in fin:
+                        newline = line
+                        for regex in regexs:
+                            if regex.search(newline):
+                                newline = regex.sub(r'\1', newline)
+                                break
+                        
+                        fout.write(newline)
+                        
+                shutil.move(outfile, fullname)
+           
                 
                 
 if __name__ == '__main__':
@@ -51,4 +56,15 @@ if __name__ == '__main__':
         
     flags = GetFlagsFromFile(FLAGS_FILE)
     CleanseFileInPlace(dir, flags)
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     
