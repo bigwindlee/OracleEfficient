@@ -22,7 +22,7 @@ def CleanseFileInPlace(dir, flags):
             fullname = os.path.join(dirname, fname)
             if os.path.splitext(fullname)[1] in extensions:
                 outfile = fullname + '.bak'
-                with open(fullname, 'r', encoding='utf-8', errors='ignore') as fin, open(outfile, 'w') as fout:
+                with open(fullname, 'r', encoding='utf-8', errors='ignore') as fin, open(outfile, 'w', encoding='utf-8', errors='ignore') as fout:
                     for line in fin:
                         newline = line
                         for regex in regexs:
@@ -33,7 +33,6 @@ def CleanseFileInPlace(dir, flags):
                         fout.write(newline)
                         
                 shutil.move(outfile, fullname)
-           
                 
                 
 if __name__ == '__main__':
