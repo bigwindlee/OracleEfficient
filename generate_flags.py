@@ -9,7 +9,6 @@ def CollectFlags(dir, flags):
         for fname in fileshere:
             if fname.endswith('.h'):
                 fullname = os.path.join(dirname, fname)
-                print(fullname)
                 with open(fullname, 'r', encoding='utf-8', errors='ignore') as f:
                     for line in f:
                         prog = p.search(line)
