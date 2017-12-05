@@ -14,7 +14,7 @@ def CleanseFileInPlace(dir, flags):
     extensions = ['.h', '.cpp']
     for flag in sorted(flags):
         flag = flag.strip()
-        pattern = r'{0}\((.*?)\)'.format(flag)
+        pattern = r'{0}\s*\((.*?)\)'.format(flag)
         regexs.append(re.compile(pattern))
 
     for (dirname, subshere, fileshere) in os.walk(dir):
@@ -57,15 +57,3 @@ if __name__ == '__main__':
         
     flags = GetFlagsFromFile(FLAGS_FILE)
     CleanseFileInPlace(dir, flags)
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
