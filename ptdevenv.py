@@ -133,6 +133,56 @@ def COPY_SRC_CODE(BUILD_RELEASE, LOG=None):
         WriteLog(' OK', file=LOG)
     else:
         WriteLog('\nWarning: src is not existing.', file=LOG)
+
+        
+def GetFlagsFromFile(filename):
+    flags = set()
+    with open(filename, 'r', encoding='utf-8', errors='ignore') as f:
+        for line in f:
+            line = line.strip()
+            if line:
+                flags.add(line)
+    return flags
+    
+def CleanseFileForSI(dir):
+    flags = GetFlagsFromFile('config\\flags.txt')
+    regexs = []
+    extensions = ['.h', '.cpp']
+    for flag in sorted(flags):
+        pattern = r'{0}\s*\((.*?)\)'.format(flag)
+        regexs.append(re.compile(pattern))
+
+    for (dirname, subshere, fileshere) in os.walk(dir):
+        for fname in fileshere:
+            fullname = os.path.join(dirname, fname)
+            if os.path.splitext(fullname)[1] in extensions:
+                outfile = fullname + '.bak'
+                with open(fullname, 'r', encoding='utf-8', errors='ignore') as fin, open(outfile, 'w', encoding='utf-8', errors='ignore') as fout:
+                    for line in fin:
+                        if line.strip() == 'PsStartProtoC' or line.strip() == 'PsEndProtoC':
+                            continue
+                        newline = line
+                        for regex in regexs:
+                            if regex.search(newline):
+                                newline = regex.sub(r'\1', newline)
+                                break
+                        
+                        fout.write(newline)
+                        
+                shutil.move(outfile, fullname)    
+        
+# Copy the source code into a specific directory and cleanse the code for source insight.        
+def generate_src_for_si(src, dst):
+    file_type = '*.h *.cpp *.java'
+    copy_cmd = 'robocopy {0} {1} {2} /S'.format(src, dst, filetype)
+    retcode = subprocess.call(copy_cmd, stdout=subprocess.DEVNULL)
+    if retcode not in [0, 1]:
+        raise RuntimeError(('Robocopy failed(retcode=%d). From: ' + src + ' To: ' + dst) % retcode)
+
+    CleanseFileForSI(dst)
+    zip_cmd = 'zip -r {0}.zip {1}'.format('myzip', dst) #TODO
+    subprocess.check_call(zip_cmd, stdout=subprocess.DEVNULL)
+    shutil.rmtree(dst)
     
         
 if __name__ == '__main__':
