@@ -6,14 +6,15 @@ def GetFlagsFromFile(filename):
     flags = set()
     with open(filename, 'r', encoding='utf-8', errors='ignore') as f:
         for line in f:
-            flags.add(line)
+            line = line.strip()
+            if line:
+                flags.add(line)
     return flags
 
 def CleanseFileInPlace(dir, flags):
     regexs = []
     extensions = ['.h', '.cpp']
     for flag in sorted(flags):
-        flag = flag.strip()
         pattern = r'{0}\s*\((.*?)\)'.format(flag)
         regexs.append(re.compile(pattern))
 
