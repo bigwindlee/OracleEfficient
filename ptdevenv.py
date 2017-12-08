@@ -145,7 +145,7 @@ def GetFlagsFromFile(filename):
     return flags
     
 def CleanseFileForSI(dir):
-    flags = GetFlagsFromFile('config\\flags.txt')
+    flags = GetFlagsFromFile('config\\flags.ini')
     regexs = []
     extensions = ['.h', '.cpp']
     for flag in sorted(flags):
@@ -172,17 +172,21 @@ def CleanseFileForSI(dir):
                 shutil.move(outfile, fullname)    
         
 # Copy the source code into a specific directory and cleanse the code for source insight.        
-def generate_src_for_si(src, dst):
+def generate_src_for_si(BUILD_RELEASE, MOVE_TO):
     file_type = '*.h *.cpp *.java'
-    copy_cmd = 'robocopy {0} {1} {2} /S'.format(src, dst, filetype)
+    src = os.path.join(DevConfig['LocalRepos'], 'pt{0}-debug'.format(BUILD_RELEASE), 'src')
+    dst = os.path.join(DevConfig['LocalRepos'], BUILD_RELEASE, 'src')
+    copy_cmd = 'robocopy {0} {1} {2} /S'.format(src, dst, file_type)
     retcode = subprocess.call(copy_cmd, stdout=subprocess.DEVNULL)
     if retcode not in [0, 1]:
         raise RuntimeError(('Robocopy failed(retcode=%d). From: ' + src + ' To: ' + dst) % retcode)
 
     CleanseFileForSI(dst)
-    zip_cmd = 'zip -r {0}.zip {1}'.format('myzip', dst) #TODO
+    zip_cmd = 'zip -r {0} {1}'.format(os.path.join(MOVE_TO, BUILD_RELEASE+".zip"), "src") 
+    os.chdir(dst + "\\..")
     subprocess.check_call(zip_cmd, stdout=subprocess.DEVNULL)
-    shutil.rmtree(dst)
+    os.chdir(DevConfig['LocalRepos'])
+    shutil.rmtree(BUILD_RELEASE)
     
         
 if __name__ == '__main__':
