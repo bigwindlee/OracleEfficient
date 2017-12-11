@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import os, sys, shutil
+import os, sys, shutil, re
 import subprocess
 import configparser
 
@@ -35,7 +35,10 @@ def ConfigManager(filename):
     ret['LjustWidth'] = config.getint('DEFAULT', 'LjustWidth')
     ret['JRE_DIR_TEMPL'] = config.get('DEFAULT', 'JRE_DIR_TEMPL')
     ret['VS_SLN_ZIP'] = config.get('DEFAULT', 'VS_SLN_ZIP')
+    ret['FLAGS_PATH'] = config.get('DEFAULT', 'FLAGS_PATH')
+    ret['MOVE_TO'] = config.get('DEFAULT', 'MOVE_TO')
     return ret
+    
 
 def WriteLog(LOG_ITEM, end='\n', file=sys.stdout, flush=False):
     if file is not None:
@@ -115,6 +118,7 @@ def COPY_BUILD(BUILD_RELEASE, LOG=None):
     # Copy visual studio solution directory
     SLN_NAME = DevConfig['VS_SLN_ZIP'].format(MAJOR_RELEASE)
     if os.path.isfile(SLN_NAME):
+        # Why is there "+1" below ? Because the first character '\n' is also counted.
         WriteLog('\nCopy VS solution files'.ljust(DevConfig['LjustWidth'] + 1, '.'), end='', file=LOG, flush=True)
         subprocess.check_call(' '.join(['unzip', '-q', SLN_NAME, '-d', TARGET_DIR]), stdout=subprocess.DEVNULL)
         WriteLog(' OK', file=LOG)
@@ -144,8 +148,8 @@ def GetFlagsFromFile(filename):
                 flags.add(line)
     return flags
     
-def CleanseFileForSI(dir):
-    flags = GetFlagsFromFile('config\\flags.ini')
+def CleanseFileForSI(dir, flags_path):
+    flags = GetFlagsFromFile(flags_path)
     regexs = []
     extensions = ['.h', '.cpp']
     for flag in sorted(flags):
@@ -155,6 +159,7 @@ def CleanseFileForSI(dir):
     for (dirname, subshere, fileshere) in os.walk(dir):
         for fname in fileshere:
             fullname = os.path.join(dirname, fname)
+            subprocess.call("attrib -R " + fullname, stdout=subprocess.DEVNULL)
             if os.path.splitext(fullname)[1] in extensions:
                 outfile = fullname + '.bak'
                 with open(fullname, 'r', encoding='utf-8', errors='ignore') as fin, open(outfile, 'w', encoding='utf-8', errors='ignore') as fout:
@@ -172,7 +177,7 @@ def CleanseFileForSI(dir):
                 shutil.move(outfile, fullname)    
         
 # Copy the source code into a specific directory and cleanse the code for source insight.        
-def generate_src_for_si(BUILD_RELEASE, MOVE_TO):
+def generate_src_for_si(BUILD_RELEASE, FLAGS_PATH, MOVE_TO):
     file_type = '*.h *.cpp *.java'
     src = os.path.join(DevConfig['LocalRepos'], 'pt{0}-debug'.format(BUILD_RELEASE), 'src')
     dst = os.path.join(DevConfig['LocalRepos'], BUILD_RELEASE, 'src')
@@ -181,8 +186,8 @@ def generate_src_for_si(BUILD_RELEASE, MOVE_TO):
     if retcode not in [0, 1]:
         raise RuntimeError(('Robocopy failed(retcode=%d). From: ' + src + ' To: ' + dst) % retcode)
 
-    CleanseFileForSI(dst)
-    zip_cmd = 'zip -r {0} {1}'.format(os.path.join(MOVE_TO, BUILD_RELEASE+".zip"), "src") 
+    CleanseFileForSI(dst, FLAGS_PATH)
+    zip_cmd = 'zip -r {0} {1}'.format(os.path.join(MOVE_TO, BUILD_RELEASE + ".zip"), "src") 
     os.chdir(dst + "\\..")
     subprocess.check_call(zip_cmd, stdout=subprocess.DEVNULL)
     os.chdir(DevConfig['LocalRepos'])
@@ -208,4 +213,8 @@ if __name__ == '__main__':
     WriteLog(' OK', file=sys.stdout)
     
     COPY_SRC_CODE(sys.argv[1], sys.stdout)
+    
+    print('\nCleanse source code for souce insight'.ljust(DevConfig['LjustWidth'] + 1, '.'), end='', file=sys.stdout, flush=True)
+    generate_src_for_si(sys.argv[1], DevConfig['FLAGS_PATH'], DevConfig['MOVE_TO'])
+    WriteLog(' OK', file=sys.stdout)
     

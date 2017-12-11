@@ -51,7 +51,7 @@ if __name__ == '__main__':
         print('%s is not a valid directory.' % dir)
         os._exit(2)
         
-    FLAGS_FILE = 'flags.txt'
+    FLAGS_FILE = r'config\\flags.ini'
     if not os.path.isfile(FLAGS_FILE):
         print('%s does not exist.' % FLAGS_FILE)
         os._exit(3)
