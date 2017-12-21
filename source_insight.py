@@ -10,7 +10,7 @@ def GetFlagsFromFile(filename):
             if line:
                 flags.add(line)
     return flags
-    
+
 def CleanseFileForSI(dir, flags_path):
     flags = GetFlagsFromFile(flags_path)
     regexs = []
@@ -37,18 +37,18 @@ def CleanseFileForSI(dir, flags_path):
                         
                         fout.write(newline)
                         
-                shutil.move(outfile, fullname)   
+                shutil.move(outfile, fullname)
                 
                 
 if __name__ == '__main__':
     import sys
-    
+
     BASE_NAME = os.path.basename(sys.argv[0])
     if sys.argv[2:]:
         dir = os.path.normcase(os.path.normpath(sys.argv[1]))
         flags_path = os.path.normcase(os.path.normpath(sys.argv[2]))
     else:
-        print('Usage:\n\t{0} <dir> <flags>'.format(BASE_NAME))
+        print('Usage:')
         os._exit(1)
         
     if not os.path.isdir(dir):
