@@ -48,7 +48,7 @@ if __name__ == '__main__':
         dir = os.path.normcase(os.path.normpath(sys.argv[1]))
         flags_path = os.path.normcase(os.path.normpath(sys.argv[2]))
     else:
-        print('Usage:')
+        print('Usage:\n\t{0} <dir> <flags>'.format(os.path.basename(sys.argv[0])))
         os._exit(1)
         
     if not os.path.isdir(dir):
