@@ -3,6 +3,7 @@
 import os, sys, shutil, re
 import subprocess
 import configparser
+import source_insight
 
 #--------------------------------------------------------------------------------------------------
 SOURCE_DIRS = [
@@ -37,6 +38,7 @@ def ConfigManager(filename):
     ret['VS_SLN_ZIP'] = config.get('DEFAULT', 'VS_SLN_ZIP')
     ret['FLAGS_PATH'] = config.get('DEFAULT', 'FLAGS_PATH')
     ret['MOVE_TO'] = config.get('DEFAULT', 'MOVE_TO')
+    ret['SkippedDirs'] = config.get('DEFAULT', 'SkippedDirs')
     return ret
     
 
@@ -118,63 +120,49 @@ def COPY_BUILD(BUILD_RELEASE, LOG=None):
     # Copy visual studio solution directory
     SLN_NAME = DevConfig['VS_SLN_ZIP'].format(MAJOR_RELEASE)
     if os.path.isfile(SLN_NAME):
-        # Why is there "+1" below ? Because the first character '\n' is also counted.
+        # Why is there "+1" below ? Because the first character '\n' is also counted but not printed.
         WriteLog('\nCopy VS solution files'.ljust(DevConfig['LjustWidth'] + 1, '.'), end='', file=LOG, flush=True)
         subprocess.check_call(' '.join(['unzip', '-q', SLN_NAME, '-d', TARGET_DIR]), stdout=subprocess.DEVNULL)
         WriteLog(' OK', file=LOG)
     else:
         WriteLog(' '.join(['\nWarning:', SLN_NAME, 'is not existing.']), file=LOG)
 
+def get_skipped_dirs(filename):
+    skipped = []
+    if not os.path.isfile(filename):
+        return skipped
+        
+    with open(filename, 'r') as input:
+        for line in input:
+            if line.strip().startswith('#'):
+                skipped.append(line.strip()[1:].strip())
+    
+    return skipped            
+        
 
 def COPY_SRC_CODE(BUILD_RELEASE, LOG=None):    
-    TARGET_DIR = 'pt{0}-debug'.format(BUILD_RELEASE)
+    TARGET_DIR = os.path.join(DevConfig['LocalRepos'], 'pt{0}-debug'.format(BUILD_RELEASE))
     BUILD_DIR = DevConfig['RemoteBuild'].format(BUILD_RELEASE[:3], BUILD_RELEASE)
+    REMOTE_SRC = os.path.join(BUILD_DIR, 'src')
         
-    full_item = os.path.join(BUILD_DIR, 'src')
-    if os.path.isdir(full_item):
-        WriteLog('\nCopy src directory'.ljust(DevConfig['LjustWidth'] + 1, '.'), end='', file=LOG, flush=True)
-        WINDOWS_COPY_TREE(full_item, os.path.join(DevConfig['LocalRepos'], TARGET_DIR, 'src'))
-        WriteLog(' OK', file=LOG)
-    else:
+    if not os.path.isdir(REMOTE_SRC):
         WriteLog('\nWarning: src is not existing.', file=LOG)
+        return
 
+    DST_SRC = os.path.join(TARGET_DIR, 'src')
+    if not os.path.exists(DST_SRC):
+        os.mkdir(DST_SRC)
         
-def GetFlagsFromFile(filename):
-    flags = set()
-    with open(filename, 'r', encoding='utf-8', errors='ignore') as f:
-        for line in f:
-            line = line.strip()
-            if line:
-                flags.add(line)
-    return flags
-    
-def CleanseFileForSI(dir, flags_path):
-    flags = GetFlagsFromFile(flags_path)
-    regexs = []
-    extensions = ['.h', '.cpp']
-    for flag in sorted(flags):
-        pattern = r'{0}\s*\((.*?)\)'.format(flag)
-        regexs.append(re.compile(pattern))
-
-    for (dirname, subshere, fileshere) in os.walk(dir):
-        for fname in fileshere:
-            fullname = os.path.join(dirname, fname)
-            subprocess.call("attrib -R " + fullname, stdout=subprocess.DEVNULL)
-            if os.path.splitext(fullname)[1] in extensions:
-                outfile = fullname + '.bak'
-                with open(fullname, 'r', encoding='utf-8', errors='ignore') as fin, open(outfile, 'w', encoding='utf-8', errors='ignore') as fout:
-                    for line in fin:
-                        if line.strip() == 'PsStartProtoC' or line.strip() == 'PsEndProtoC':
-                            continue
-                        newline = line
-                        for regex in regexs:
-                            if regex.search(newline):
-                                newline = regex.sub(r'\1', newline)
-                                break
+    WriteLog('\nCopy src directory'.ljust(DevConfig['LjustWidth'] + 1, '.'), end='', file=LOG, flush=True)    
+    for item in os.listdir(REMOTE_SRC):
+        full_item = os.path.join(REMOTE_SRC, item)
+        if os.path.isdir(full_item):
+            if item not in get_skipped_dirs(DevConfig['SkippedDirs']):
+                WINDOWS_COPY_TREE(full_item, os.path.join(DST_SRC, item))
+        else:
+            shutil.copy(full_item, DST_SRC)
+    WriteLog(' OK', file=LOG)
                         
-                        fout.write(newline)
-                        
-                shutil.move(outfile, fullname)    
         
 # Copy the source code into a specific directory and cleanse the code for source insight.        
 def generate_src_for_si(BUILD_RELEASE, FLAGS_PATH, MOVE_TO):
@@ -186,7 +174,7 @@ def generate_src_for_si(BUILD_RELEASE, FLAGS_PATH, MOVE_TO):
     if retcode not in [0, 1]:
         raise RuntimeError(('Robocopy failed(retcode=%d). From: ' + src + ' To: ' + dst) % retcode)
 
-    CleanseFileForSI(dst, FLAGS_PATH)
+    source_insight.CleanseFileForSI(dst, FLAGS_PATH)
     zip_cmd = 'zip -r {0} {1}'.format(os.path.join(MOVE_TO, BUILD_RELEASE + ".zip"), "src") 
     os.chdir(dst + "\\..")
     subprocess.check_call(zip_cmd, stdout=subprocess.DEVNULL)
