@@ -16,5 +16,6 @@ alias szhj2='cd /home/feng/wanhe/szhj/proj/client/szhj-ui; npm run serve'
 # copy the latest <*.tgz> in /home/fun/backup from <azure> to local tmp directory
 alias myscp='scp azure:`ssh azure "ls -rt /home/fun/backup/*.tgz" |tail -1` /tmp'
 
-# debug mocha
+# run/debug mocha
+alias mo='npx mocha --require ts-node/register'
 alias demo='node --inspect-brk ./node_modules/mocha/bin/_mocha --require ts-node/register --timeout 9999999'
