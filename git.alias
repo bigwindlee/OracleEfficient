@@ -1,0 +1,6 @@
+
+# 把远端branch与tag同步到本地；并输出最新的10个tag
+# 相当于执行2条命令：
+# 1) git fetch --prune --prune-tags origin  
+# 2) git tag --merged origin/<current_branch> --sort=-creatordate | head -n 10
+git config --global alias.tags '!f(){ up=$(git rev-parse --abbrev-ref --symbolic-full-name @{u} 2>/dev/null); b=${up:-refs/remotes/origin/$(git rev-parse --abbrev-ref HEAD)}; git fetch --prune --prune-tags origin && git tag --merged "$b" --sort=-creatordate | head -n 10; }; f'
